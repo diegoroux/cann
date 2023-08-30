@@ -25,18 +25,21 @@ void mempool_init(mempool_ctx *ctx, size_t size)
         return;
 
     ctx->mem = malloc(size);
+    ctx->size = 0;
+    ctx->used = 0;
 
     if (ctx->mem == NULL)
         return;
 
     ctx->size = size;
-    ctx->used = 0;
 
     return;
 }
 
 void *mempool_alloc(mempool_ctx *ctx, size_t size)
 {
+    void *ptr = NULL;
+
     if (ctx == NULL || size == 0)
         return NULL;
 
@@ -44,8 +47,9 @@ void *mempool_alloc(mempool_ctx *ctx, size_t size)
         return NULL;
 
     if ((ctx->size - ctx->used) >= size) {
+        ptr = ctx->mem + ctx->used;
         ctx->used += size;
-        return ctx->mem + size;
+        return ptr;
     }
 
     return NULL;
