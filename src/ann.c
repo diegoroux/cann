@@ -39,8 +39,16 @@ void ann_init(ann_ctx *ctx, size_t input_nodes,
     ctx->weight_matrix = mempool_alloc(&ctx->mempool,
                         (1 + hidden_layers) * (sizeof(matrix *)));
 
-    if (ctx->weight_matrix == NULL)
-        return;
+    ctx->weight_matrix[0] = alloc_matrix(&ctx->mempool,
+                            hidden_nodes, input_nodes);
+
+    for (int i = 1; i < hidden_layers; i++) {
+        ctx->weight_matrix[i] = alloc_matrix(&ctx->mempool,
+                                hidden_nodes, hidden_nodes);
+    }
+
+    ctx->weight_matrix[hidden_layers] = alloc_matrix(&ctx->mempool,
+                                        output_nodes, hidden_nodes);
 
     return;
 }
