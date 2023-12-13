@@ -20,7 +20,7 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#ifdef _SMID_ENABLE
+#ifdef _SIMD_ENABLE
 /*
  *  SIMD-optimized dot-product.
  *
