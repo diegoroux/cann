@@ -16,11 +16,14 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <stddef.h>
+
+#ifdef _SIMD_ENABLE
+
 #include <emmintrin.h>
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#ifdef _SIMD_ENABLE
 /*
  *  SIMD-optimized dot-product.
  *
@@ -37,7 +40,8 @@ void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
 {
     __m128d ac_hi, ac_lo;
     __m256d accu, a, b;
-    int size, i, j;
+    size_t size;
+    int i, j;
 
     // Calculate how many 4 double blocks we can compute at once.
     size = columns - (columns % 4);
@@ -94,6 +98,55 @@ void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
 
     return;
 }
+
+/*
+ *  Perform a sum between column matrix A and column
+ *  matrix B. Store result in column matrix C.
+ *
+ *  @param A - pointer to column matrix A.
+ *  @param rows - Number of rows.
+ *  @param B - pointer to column matrix B.
+ *  @param C - pointer to result column
+ *  matrix C.
+*/
+void column_sum(double *A, size_t rows, double *B, double *C)
+{
+    __m256d accu, a, b;
+    size_t size;
+    int i;
+
+    // Calculate how many blocks of 4 we can form.
+    size = rows - (rows % 4);
+
+    for (i = 0; i < size; i += 4) {
+        // Load 4 doubles from A and B.
+        a = _mm256_loadu_pd(&A[i]);
+        b = _mm256_loadu_pd(&B[i]);
+
+        // Sum each pair A[i + n] + B[i + n].
+        a = _mm256_add_pd(a, b);
+
+        // Store them back into C.
+        _mm256_store_pd(&C[i], a);
+    }
+
+    // If there were elements that we 
+    // couldn't fit into a 4-element block
+    // operate them on their own.
+    switch (rows % 4) {
+        case 3:
+            C[i + 2] = A[i + 2] + B[i + 2];
+        case 2:
+            C[i + 1] = A[i + 1] + B[i + 1];
+        case 1:
+            C[i] = A[i] + B[i];
+        default:
+            break;
+    }
+
+    return;
+}
+
 #else
 
 /*
@@ -122,4 +175,26 @@ void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
 
     return;
 }
+
+/*
+ *  Perform a sum between column matrix A and column
+ *  matrix B. Store result in column matrix C.
+ *
+ *  @param A - pointer to column matrix A.
+ *  @param rows - Number of rows.
+ *  @param B - pointer to column matrix B.
+ *  @param C - pointer to result column
+ *  matrix C.
+*/
+void column_sum(double *A, size_t rows, double *B, double *C)
+{
+    int i;
+
+    for (i = 0; i < rows; i++) {
+        C[i] = A[i] + B[i];
+    }
+
+    return;
+}
+
 #endif
