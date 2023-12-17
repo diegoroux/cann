@@ -1,6 +1,6 @@
 
 /*
- *  Matrix dot-product functions.
+ *  Linear algebra functions.
  *  Copyright (C) 2023 Diego Roux
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -36,47 +36,47 @@
  *  @param C - Pointer to where the result of
  *  the dot product will be stored.
 */
-void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
+void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
 {
-    __m128d ac_hi, ac_lo;
-    __m256d accu, a, b;
+    __m128 ac_hi, ac_lo;
+    __m256 accu, a, b;
     size_t size;
     int i, j;
 
-    // Calculate how many 4 double blocks we can compute at once.
-    size = columns - (columns % 4);
+    // Calculate how many 8-float blocks we can compute at once.
+    size = columns - (columns % 8);
 
     for (i = 0; i < rows; i++) {
         accu = _mm256_setzero_pd();
 
-        for (j = 0; j < size; j += 4) {
-            // Load 4 doubles from A and B.
-            a = _mm256_loadu_pd(&A[j]);
-            b = _mm256_loadu_pd(&B[j]);
+        for (j = 0; j < size; j += 8) {
+            // Load 8 floats from A and B.
+            a = _mm256_loadu_ps(&A[j]);
+            b = _mm256_loadu_ps(&B[j]);
 
-            // Multiply A[j:j+4] * B[j:j+4].
-            a = _mm256_mul_pd(a, b);
+            // Multiply A[j:j+8] * B[j:j+8].
+            a = _mm256_mul_ps(a, b);
 
             // Add the result to the accumulator.
-            accu = _mm256_add_pd(a, accu);
+            accu = _mm256_add_ps(a, accu);
         }
 
         // Once we're done with all the blocks,
         // we separate the accumulator into two.
-        ac_lo = _mm256_extractf128_pd(accu, 0);
-        ac_hi = _mm256_extractf128_pd(accu, 1);
+        ac_lo = _mm256_extractf128_ps(accu, 0);
+        ac_hi = _mm256_extractf128_ps(accu, 1);
 
         // Add the two parts of the accumulator
         // with each other. 
-        ac_lo = _mm_add_pd(ac_lo, ac_hi);
+        ac_lo = _mm_add_ps(ac_lo, ac_hi);
 
         // Add the results.
-        ac_lo = _mm_hadd_pd(ac_lo, ac_lo);
+        ac_lo = _mm_hadd_ps(ac_lo, ac_lo);
 
         // Obtain the lower half, which contains
         // the sum of all the numbers in the 
         // original accumulator.
-        C[i] = _mm_cvtsd_f64(ac_lo);
+        C[i] = _mm_cvtss_f32(ac_lo);
 
         // If there were elements that we 
         // couldn't fit into a 4-element block
@@ -115,19 +115,19 @@ void column_sum(double *A, size_t rows, double *B, double *C)
     size_t size;
     int i;
 
-    // Calculate how many blocks of 4 we can form.
-    size = rows - (rows % 4);
+    // Calculate how many blocks of 8 we can form.
+    size = rows - (rows % 8);
 
-    for (i = 0; i < size; i += 4) {
-        // Load 4 doubles from A and B.
-        a = _mm256_loadu_pd(&A[i]);
-        b = _mm256_loadu_pd(&B[i]);
+    for (i = 0; i < size; i += 8) {
+        // Load 8 floats from A and B.
+        a = _mm256_loadu_ps(&A[i]);
+        b = _mm256_loadu_ps(&B[i]);
 
         // Sum each pair A[i + n] + B[i + n].
-        a = _mm256_add_pd(a, b);
+        a = _mm256_add_ps(a, b);
 
         // Store them back into C.
-        _mm256_store_pd(&C[i], a);
+        _mm256_store_ps(&C[i], a);
     }
 
     // If there were elements that we 
@@ -161,7 +161,7 @@ void column_sum(double *A, size_t rows, double *B, double *C)
  *  @param C - Pointer to where the result of
  *  the dot product will be stored.
 */
-void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
+void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
 {
     int i, j;
 
@@ -186,7 +186,7 @@ void matrix_mult(double *A, size_t rows, size_t columns, double *B, double *C)
  *  @param C - pointer to result column
  *  matrix C.
 */
-void column_sum(double *A, size_t rows, double *B, double *C)
+void column_sum(float *A, size_t rows, float *B, float *C)
 {
     int i;
 
