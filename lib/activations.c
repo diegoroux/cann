@@ -76,8 +76,10 @@ CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out)
 
     // Allocate a new tensor.
     if (out == NULL) {
-        out = malloc(sizeof(CTensor_s));
-        out->data = malloc(in->size * sizeof(ctensor_data_t));
+        out = ctensor_new_tensor(in->size);
+
+        if (out == NULL)
+            return NULL;
     }
 
     d_in = in->data;
