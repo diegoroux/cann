@@ -1,8 +1,10 @@
 # CTensor
 
-CTensor is a simple and lightweight tensor-like library in pure C. The goal of this project is to provide an easy-to-understand implementation of fundamental tensor operations, and provide a hands-on learning experience for me (and hopefully others :)) into the internal intrisics of neural network frameworks.
+CTensor is a simple and lightweight tensor-like library in pure C, while also providing an optional C++ wrapper for Model abstractions. The goal of this project is to provide an easy-to-understand implementation of fundamental tensor operations, and provide a hands-on learning experience for me (and hopefully others :)) into the internal intrisics of neural network frameworks.
 
-This library is currently a Work-In-Progress (WIP), 
+CTensor implements a Sequential Model architecture, meaning that each layer will only have exactly one input tensor and one output tensor.
+
+This library is currently a Work-In-Progress (WIP), as such the API/ABI shall be considered highly unstable!
 
 ## Getting Started
 Clone the repo:
