@@ -49,3 +49,29 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out);
  *  @return - Tensor output pointer.
 */
 CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out);
+
+/*
+ *  Dot-product against a column matrix.
+ *
+ *  B shall always be of size columns x 1.
+ *  
+ *  @param A - Pointer to the matrix
+ *  @param rows - Number of A's rows.
+ *  @param columns - Number of A's columns.
+ *  @param B - Pointer to the B column matrix.
+ *  @param C - Pointer to where the result of
+ *  the dot product will be stored.
+*/
+void ctensor_mv_dot_product(float *A, size_t rows, size_t columns, float *B, float *C);
+
+/*
+ *  Perform a sum between vector A and
+ *  vector B. Store result in vector C.
+ *
+ *  @param A - pointer to vector A.
+ *  @param elements - Number of elements.
+ *  @param B - pointer to vector B.
+ *  @param C - pointer to result column
+ *  matrix C.
+*/
+void ctensor_vector_sum(float *A, size_t elements, float *B, float *C);
