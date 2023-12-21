@@ -61,15 +61,18 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out)
  *  First order partial derivative of the
  *  ReLU (Rectified Linear Unit) function.
  *  Calculates the local gradient of
- *  each input.
+ *  each input, and by chain rule, multiplies
+ *  it by the loss gradient it receives.
  *
  *  @params in - Tensor input.
  *  @param out - Tensor output or NULL.
  *  If NULL, a new tensor will be allocated.
+ *  @param loss_grad - Tensor holding the gradient
+ *  that's being backpropagated.
  *
  *  @return - Tensor output pointer.
 */
-CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out)
+CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out, CTensor_s *loss_grad)
 {
     ctensor_data_t *d_in, *d_out;
     int i;
@@ -84,8 +87,9 @@ CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out)
 
     d_in = in->data;
     d_out = out->data;
+    d_loss = loss_grad->data;
 
-    // As well return the partial derivative for each
+    // As we'll return the partial derivative for each
     // element, both tensors have the same size.
     out->size = in->size;
 
@@ -93,7 +97,7 @@ CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out)
     // equals 1, for all d_in[i] > 0.
     // And 0 for everything else. 
     for (i = 0; i < in->size; i++)
-        d_out[i] = (d_in[i] <= 0) ? 0 : 1;
+        d_out[i] = (d_in[i] <= 0) ? 0 : d_loss[i];
     
     return out;
 }

@@ -25,7 +25,7 @@
 #include <immintrin.h>
 
 /*
- *  SIMD-optimized dot-product.
+ *  Dot-product against a column matrix.
  *
  *  B shall always be of size columns x 1.
  *  
@@ -36,7 +36,7 @@
  *  @param C - Pointer to where the result of
  *  the dot product will be stored.
 */
-void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
+void ctensor_mv_dot_product(float *A, size_t rows, size_t columns, float *B, float *C)
 {
     __m128 ac_hi, ac_lo;
     __m256 accu, a, b;
@@ -108,23 +108,23 @@ void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
 }
 
 /*
- *  Perform a sum between column matrix A and column
- *  matrix B. Store result in column matrix C.
+ *  Perform a sum between vector A and
+ *  vector B. Store result in vector C.
  *
- *  @param A - pointer to column matrix A.
- *  @param rows - Number of rows.
- *  @param B - pointer to column matrix B.
+ *  @param A - pointer to vector A.
+ *  @param elements - Number of elements.
+ *  @param B - pointer to vector B.
  *  @param C - pointer to result column
  *  matrix C.
 */
-void column_sum(double *A, size_t rows, double *B, double *C)
+void ctensor_vector_sum(float *A, size_t elements, float *B, float *C)
 {
     __m256d accu, a, b;
     size_t size;
     int i;
 
     // Calculate how many blocks of 8 we can form.
-    size = rows - (rows % 8);
+    size = elements - (elements % 8);
 
     for (i = 0; i < size; i += 8) {
         // Load 8 floats from A and B.
@@ -141,7 +141,7 @@ void column_sum(double *A, size_t rows, double *B, double *C)
     // If there were elements that we 
     // couldn't fit into a 8-element block
     // operate them on their own.
-    switch (columns % 8) {
+    switch (elements % 8) {
         case 7:
             C[i + 6] = A[i + 6] + B[i + 6];
         case 6:
@@ -177,14 +177,13 @@ void column_sum(double *A, size_t rows, double *B, double *C)
  *  @param C - Pointer to where the result of
  *  the dot product will be stored.
 */
-void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
+void ctensor_mv_dot_product(float *A, size_t rows, size_t columns, float *B, float *C)
 {
     int i, j;
 
     for (i = 0; i < rows; i++) {
-        for (j = 0; j < columns; j++) {
+        for (j = 0; j < columns; j++)
             C[i] += A[j] * B[j];
-        }
 
         A += columns;
     }
@@ -193,22 +192,21 @@ void matrix_mult(float *A, size_t rows, size_t columns, float *B, float *C)
 }
 
 /*
- *  Perform a sum between column matrix A and column
- *  matrix B. Store result in column matrix C.
+ *  Perform a sum between vector A and vector
+ *  B. Store result in vector C.
  *
- *  @param A - pointer to column matrix A.
- *  @param rows - Number of rows.
- *  @param B - pointer to column matrix B.
+ *  @param A - pointer to vector A.
+ *  @param elements - Number of elements.
+ *  @param B - pointer to vector B.
  *  @param C - pointer to result column
  *  matrix C.
 */
-void column_sum(float *A, size_t rows, float *B, float *C)
+void ctensor_vector_sum(float *A, size_t elements, float *B, float *C)
 {
     int i;
 
-    for (i = 0; i < rows; i++) {
+    for (i = 0; i < elements; i++)
         C[i] = A[i] + B[i];
-    }
 
     return;
 }
