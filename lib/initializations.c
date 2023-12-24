@@ -30,13 +30,13 @@
  *
  *  @return - Returns a tensor with size out_size x in_size.
 */
-CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size)
+CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size, uint64_t seed)
 {
     ctensor_data_t std;
     CTensor_s *tensor;
     int i;
 
-    tensor = ctensor_randn(out_size * in_size);
+    tensor = ctensor_randn(out_size * in_size, seed);
     if (tensor == NULL)
         return NULL;
 

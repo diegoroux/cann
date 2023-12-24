@@ -17,6 +17,7 @@
 */
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef float ctensor_data_t;
 
@@ -138,4 +139,39 @@ CTensor_s *ctensor_randn(size_t size, uint64_t seed);
  *
  *  @return - Returns a tensor with size out_size x in_size.
 */
-CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size);
+CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size, uint64_t seed);
+
+/*
+ *  Implements the forward pass of the FCL.
+ *
+ *  Defined as O = W • X + B, where W is the
+ *  weight matrix (out_size x in_size), X
+ *  is the input data as a vector/column matrix,
+ *  B is the bias data as a vector/column matrix,
+ *  and O is the output (out_size x 1).
+ *
+ *  @param in - Tensor coming in.
+ *  @param kernel - Weight tensor.
+ *  @param bias - Bias tensor.
+ *  @param out - Out tensor.
+ *
+ *  @return - Pointer to the out tensor.
+*/
+CTensor_s *ctensor_fcl_fwd(CTensor_s *in, CTensor_s *kernel, CTensor_s *bias, CTensor_s *out);
+
+/*
+ *  Implements the backprop pass of the FCL.
+ *
+ *  @param in - Tensor coming in.
+ *  @param kernel - Weight tensor.
+ *  @param loss_grad - Gradient backpropagated.
+ *  @param kernel_grad - Weight gradient with respect to
+ *  the loss function.
+ *  @param bias_grad - Bias gradient with respect to the
+ *  loss function.
+ *
+ *  @return - Pointer to the tensor, contaning the gradient
+ *  of the input with respect to the loss function.
+*/
+CTensor_s *ctensor_fcl_bckp(CTensor_s *in, CTensor_s *kernel, CTensor_s *loss_grad,
+                            CTensor_s *kernel_grad, CTensor_s *bias_grad);
