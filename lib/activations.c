@@ -18,9 +18,6 @@
 
 #include <ctensor/ctensor.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-
 /*
  *  ReLU (Rectified Linear Unit) function.
  *  Applies ReLU element-wise to the provided
@@ -74,7 +71,7 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out)
 */
 CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out, CTensor_s *loss_grad)
 {
-    ctensor_data_t *d_in, *d_out;
+    ctensor_data_t *d_in, *d_out, *d_loss;
     int i;
 
     // Allocate a new tensor.

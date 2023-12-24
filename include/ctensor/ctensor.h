@@ -42,15 +42,18 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out);
  *  First order partial derivative of the
  *  ReLU (Rectified Linear Unit) function.
  *  Calculates the local gradient of
- *  each input.
+ *  each input, and by chain rule, multiplies
+ *  it by the loss gradient it receives.
  *
  *  @params in - Tensor input.
  *  @param out - Tensor output or NULL.
  *  If NULL, a new tensor will be allocated.
+ *  @param loss_grad - Tensor holding the gradient
+ *  that's being backpropagated.
  *
  *  @return - Tensor output pointer.
 */
-CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out);
+CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out, CTensor_s *loss_grad);
 
 /*
  *  Dot-product against a column matrix.
@@ -121,3 +124,15 @@ CTensor_s *ctensor_randu(size_t size);
  *  containing the random numbers.
 */
 CTensor_s *ctensor_randn(size_t size);
+
+/*
+ *  Initialize weights using the Xavier-He initialization
+ *  method.
+ *
+ *  @param in_size - Number of nodes in previous layer.
+ *  @param out_size - Number of nodes in the current
+ *  layer.
+ *
+ *  @return - Returns a tensor with size out_size x in_size.
+*/
+CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size);
