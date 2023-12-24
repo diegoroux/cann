@@ -106,24 +106,27 @@ void ctensor_destroy_tensor(CTensor_s *tensor);
  *  Uses Blackman's and Vigna's xoshiro128+.
  *
  *  @param size - numbers to be generated
+ *  @param seed - Seed for the PRNG.
  *
  *  @return - New allocated tensor
  *  containing the random numbers.
 */
-CTensor_s *ctensor_randu(size_t size);
+CTensor_s *ctensor_randu(size_t size, uint64_t seed);
 
 /*
  *  Generates n-size random numbers
  *  sampled from a normal distribution.
  *  
- *  Uses Blackman's and Vigna's xoshiro128+.
+ *  Uses Blackman's and Vigna's xoshiro128+
+ *  and the Marsaglia polar method.
  *
- *  @param size - numbers to be generated
+ *  @param size - numbers to be generated.
+ *  @param seed - Seed for the PRNG.
  *
  *  @return - New allocated tensor
  *  containing the random numbers.
 */
-CTensor_s *ctensor_randn(size_t size);
+CTensor_s *ctensor_randn(size_t size, uint64_t seed);
 
 /*
  *  Initialize weights using the Xavier-He initialization

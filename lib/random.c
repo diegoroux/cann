@@ -19,7 +19,6 @@
 #include <ctensor/ctensor.h>
 
 #include <stdint.h>
-#include <time.h>
 #include <math.h>
 
 #define ROTL(x, r) ((x << r) | (x >> (32 - r)))
@@ -95,15 +94,15 @@ static float xoshiro128p(uint32_t *s) {
  *  Uses Blackman's and Vigna's xoshiro128+.
  *
  *  @param size - numbers to be generated
+ *  @param seed - Seed for the PRNG.
  *
  *  @return - New allocated tensor
  *  containing the random numbers.
 */
-CTensor_s *ctensor_randu(size_t size)
+CTensor_s *ctensor_randu(size_t size, uint64_t seed)
 {
     CTensor_s *tensor;
-    uint32_t s[4];
-    uint64_t x;
+    uint32_t state[4];
     int i;
 
     // Allocate the new tensor.
@@ -111,16 +110,13 @@ CTensor_s *ctensor_randu(size_t size)
     if (tensor == NULL)
         return NULL;
 
-    // Time will be the our seed for SplitMix64.
-    x = time(NULL);
-
     // Fill the 128-bit state with randomness.
-    splitmix64(&x, s);
-    splitmix64(&x, &s[2]);
+    splitmix64(&seed, state);
+    splitmix64(&seed, &state[2]);
 
     // Generate all numbers.
     for (i = 0; i < tensor->size; i++)
-        tensor->data[i] = xoshiro128p(s);
+        tensor->data[i] = xoshiro128p(state);
 
     return tensor;
 }
@@ -132,16 +128,16 @@ CTensor_s *ctensor_randu(size_t size)
  *  Uses Blackman's and Vigna's xoshiro128+
  *  and the Marsaglia polar method.
  *
- *  @param size - numbers to be generated
+ *  @param size - numbers to be generated.
+ *  @param seed - Seed for the PRNG.
  *
  *  @return - New allocated tensor
  *  containing the random numbers.
 */
-CTensor_s *ctensor_randn(size_t size)
+CTensor_s *ctensor_randn(size_t size, uint64_t seed)
 {
     CTensor_s *tensor;
     uint32_t state[4];
-    uint64_t seed;
     float x, y, s;
     int i;
 
@@ -149,9 +145,6 @@ CTensor_s *ctensor_randn(size_t size)
     tensor = ctensor_new_tensor(size);
     if (tensor == NULL)
         return NULL;
-
-    // Seed SplitMix64 with the time.
-    seed = time(NULL);
 
     // Fill the 128-bit state with randomness.
     splitmix64(&seed, state);
