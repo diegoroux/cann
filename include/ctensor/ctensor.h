@@ -16,11 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <stddef.h>
+
 typedef float ctensor_data_t;
 
 typedef struct {
     size_t          size;
-    ctensor_data_t  data;
+    ctensor_data_t  *data;
 } CTensor_s;
 
 /*
@@ -75,3 +77,47 @@ void ctensor_mv_dot_product(float *A, size_t rows, size_t columns, float *B, flo
  *  matrix C.
 */
 void ctensor_vector_sum(float *A, size_t elements, float *B, float *C);
+
+/*
+ *  Allocate a new tensor.
+ *
+ *  @param size - Size of the new tensor.
+ *
+ *  @return - New allocated tensor pointer.
+*/
+CTensor_s *ctensor_new_tensor(size_t size);
+
+/*
+ *  De-allocate tensor.
+ *
+ *  @param tensor - Pointer to the tensor struct
+ *  to be de-allocated.
+*/
+void ctensor_destroy_tensor(CTensor_s *tensor);
+
+/*
+ *  Generates n-size random numbers
+ *  sampled from a uniform distribution
+ *  within the range [0, 1).
+ *  
+ *  Uses Blackman's and Vigna's xoshiro128+.
+ *
+ *  @param size - numbers to be generated
+ *
+ *  @return - New allocated tensor
+ *  containing the random numbers.
+*/
+CTensor_s *ctensor_randu(size_t size);
+
+/*
+ *  Generates n-size random numbers
+ *  sampled from a normal distribution.
+ *  
+ *  Uses Blackman's and Vigna's xoshiro128+.
+ *
+ *  @param size - numbers to be generated
+ *
+ *  @return - New allocated tensor
+ *  containing the random numbers.
+*/
+CTensor_s *ctensor_randn(size_t size);
