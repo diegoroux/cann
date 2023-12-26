@@ -26,6 +26,52 @@ typedef struct {
     ctensor_data_t  *data;
 } CTensor_s;
 
+typedef void (*CTensor_Layer_cb)(void *);
+
+typedef struct _layer_s {
+    // Models are really just linked lists
+    // with callbacks, and hyperparameters.
+    struct _layer_s     *next;
+    struct _layer_s     *prev;
+    // Forward-pass layer callback function.
+    CTensor_Layer_cb    fwd;
+    // Backprop-pass layer callback function.
+    CTensor_Layer_cb    bckp;
+    // Cleanup (dealloc internal(_grad)).
+    CTensor_Layer_cb    del;
+    // Pointer to the 'prev' layer's 'in'.
+    CTensor_s           *in;
+    // Pointer to allocated 'out' Tensor.
+    CTensor_s           *out;
+    /*  Internal variables and/or state.
+     *
+     *  It's the layer's responsability to allocate and
+     *  deallocate this variable, along with its contents.
+     *
+     *  Implementations of 'internal' are not standarized
+     *  as the Model Abstraction API will never interact with
+     *  them; and just serve as a way to pass variables
+     *  that the layer needs without forcing this to be a
+     *  single Tensor/variable. */
+    void                *internal;
+    /*  Gradient of each 'in' element,
+     *  with respect to the loss function.
+     *  Gradient which will be backpropagated to
+     *  the 'prev' layer. */
+    CTensor_s           *loss_grad;
+    /*  Gradient of each internal element, exported as a
+     *  tensor so that the Model Abstraction API can do
+     *  autograd.
+     *
+     *  It's the layer's responsability to allocate and
+     *  deallocate this gradient Tensor.
+     *
+     *  'internal_grad' being NULL at training epochs
+     *  will be interpreted as this layer not having
+     *  any "trainable" variables. */
+    CTensor_s           *internal_grad;
+} CTensor_Layer_s;
+
 /*
  *  ReLU (Rectified Linear Unit) function.
  *  Applies ReLU element-wise to the provided
