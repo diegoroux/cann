@@ -24,23 +24,43 @@
  *  Initialize weights using the Xavier-He initialization
  *  method.
  *
- *  @param in_size - Number of nodes in previous layer.
- *  @param out_size - Number of nodes in the current
- *  layer.
- *
- *  @return - Returns a tensor with size out_size x in_size.
+ *  @param tensor - Pointer to the Tensor to be initialization.
+ *  @param in_size - Number of nodes in the previous layer.
+ *  @param seed - Seed for the PRNG.
 */
-CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size, uint64_t seed)
+void ctensor_xavier_he_init(CTensor_s *tensor, size_t in_size, uint64_t seed)
 {
     ctensor_data_t std;
-    CTensor_s *tensor;
     int i;
 
-    tensor = ctensor_randn(out_size * in_size, seed);
-    if (tensor == NULL)
-        return NULL;
+    // Fill the tensor with random numbers sampled from a normal distribution.
+    ctensor_randn(tensor, seed);
 
     std = sqrtf(2.0 / in_size);
+
+    for (i = 0; i < tensor->size; i++)
+        tensor->data[i] *= std;
+
+    return tensor;
+}
+
+/*
+ *  Initialize weights using the Xavier initialization
+ *  method.
+ *
+ *  @param tensor - Pointer to the Tensor to be initialization.
+ *  @param in_size - Number of nodes in the previous layer.
+ *  @param seed - Seed for the PRNG.
+*/
+void ctensor_xavier_init(CTensor_s *tensor, size_t in_size, uint64_t seed)
+{
+    ctensor_data_t std;
+    int i;
+
+    // Fill the tensor with random numbers sampled from a normal distribution.
+    ctensor_randn(tensor, seed);
+
+    std = sqrtf(1.00 / in_size);
 
     for (i = 0; i < tensor->size; i++)
         tensor->data[i] *= std;

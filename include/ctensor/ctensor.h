@@ -79,17 +79,25 @@ typedef struct _layer_s {
 } CTensor_Layer_s;
 
 /*
- *  ReLU (Rectified Linear Unit) function.
- *  Applies ReLU element-wise to the provided
- *  Tensor.
+ *  ReLU initial layer function.
+ *  Fills all the layer information for the
+ *  Model Abstraction API. As defined in 
+ *  the documentation.
  *
- *  @params in - Tensor input.
- *  @param out - Tensor outupt or NULL.
- *  If NULL, a new tensor will be allocated.
- *
- *  @return - Tensor output pointer.
+ *  @param layer - Pointer of the current
+ *  ReLU layer "object" to be filled.
 */
-CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out);
+void ctensor_relu_init(CTensor_Layer_s *layer);
+
+/*
+ *  ReLU (Rectified Linear Unit) forward pass
+ *  function, applies ReLU element-wise to
+ *  the provided Tensor.
+ *
+ *  @params layer - Pointer to the current
+ *  ReLU layer "object".
+*/
+void ctensor_relu_fwd(CTensor_Layer_s *layer);
 
 /*
  *  First order partial derivative of the
@@ -98,15 +106,10 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out);
  *  each input, and by chain rule, multiplies
  *  it by the loss gradient it receives.
  *
- *  @params in - Tensor input.
- *  @param out - Tensor output or NULL.
- *  If NULL, a new tensor will be allocated.
- *  @param loss_grad - Tensor holding the gradient
- *  that's being backpropagated.
- *
- *  @return - Tensor output pointer.
+ *  @params layer - Pointer to the current
+ *  ReLU layer "object".
 */
-CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out, CTensor_s *loss_grad);
+void ctensor_relu_bckp(CTensor_Layer_s *layer);
 
 /*
  *  Dot-product against a column matrix.
@@ -158,13 +161,10 @@ void ctensor_destroy_tensor(CTensor_s *tensor);
  *  
  *  Uses Blackman's and Vigna's xoshiro128+.
  *
- *  @param size - numbers to be generated
+ *  @param tensor - Tensor to be filled.
  *  @param seed - Seed for the PRNG.
- *
- *  @return - New allocated tensor
- *  containing the random numbers.
 */
-CTensor_s *ctensor_randu(size_t size, uint64_t seed);
+void ctensor_randu(CTensor_s *tensor, uint64_t seed);
 
 /*
  *  Generates n-size random numbers
@@ -173,57 +173,17 @@ CTensor_s *ctensor_randu(size_t size, uint64_t seed);
  *  Uses Blackman's and Vigna's xoshiro128+
  *  and the Marsaglia polar method.
  *
- *  @param size - numbers to be generated.
+ *  @param tensor - Tensor to be filled.
  *  @param seed - Seed for the PRNG.
- *
- *  @return - New allocated tensor
- *  containing the random numbers.
 */
-CTensor_s *ctensor_randn(size_t size, uint64_t seed);
+void ctensor_randn(CTensor_s *tensor, uint64_t seed);
 
 /*
  *  Initialize weights using the Xavier-He initialization
  *  method.
  *
- *  @param in_size - Number of nodes in previous layer.
- *  @param out_size - Number of nodes in the current
- *  layer.
- *
- *  @return - Returns a tensor with size out_size x in_size.
+ *  @param tensor - Pointer to the Tensor to be initialization.
+ *  @param in_size - Number of nodes in the previous layer.
+ *  @param seed - Seed for the PRNG.
 */
-CTensor_s *ctensor_xavier_he_init(size_t in_size, size_t out_size, uint64_t seed);
-
-/*
- *  Implements the forward pass of the FCL.
- *
- *  Defined as O = W • X + B, where W is the
- *  weight matrix (out_size x in_size), X
- *  is the input data as a vector/column matrix,
- *  B is the bias data as a vector/column matrix,
- *  and O is the output (out_size x 1).
- *
- *  @param in - Tensor coming in.
- *  @param kernel - Weight tensor.
- *  @param bias - Bias tensor.
- *  @param out - Out tensor.
- *
- *  @return - Pointer to the out tensor.
-*/
-CTensor_s *ctensor_fcl_fwd(CTensor_s *in, CTensor_s *kernel, CTensor_s *bias, CTensor_s *out);
-
-/*
- *  Implements the backprop pass of the FCL.
- *
- *  @param in - Tensor coming in.
- *  @param kernel - Weight tensor.
- *  @param loss_grad - Gradient backpropagated.
- *  @param kernel_grad - Weight gradient with respect to
- *  the loss function.
- *  @param bias_grad - Bias gradient with respect to the
- *  loss function.
- *
- *  @return - Pointer to the tensor, contaning the gradient
- *  of the input with respect to the loss function.
-*/
-CTensor_s *ctensor_fcl_bckp(CTensor_s *in, CTensor_s *kernel, CTensor_s *loss_grad,
-                            CTensor_s *kernel_grad, CTensor_s *bias_grad);
+void ctensor_xavier_he_init(CTensor_s *tensor, size_t in_size, uint64_t seed);

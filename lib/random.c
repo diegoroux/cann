@@ -93,22 +93,13 @@ static float xoshiro128p(uint32_t *s) {
  *  
  *  Uses Blackman's and Vigna's xoshiro128+.
  *
- *  @param size - numbers to be generated
+ *  @param tensor - Tensor to be filled.
  *  @param seed - Seed for the PRNG.
- *
- *  @return - New allocated tensor
- *  containing the random numbers.
 */
-CTensor_s *ctensor_randu(size_t size, uint64_t seed)
+void ctensor_randu(CTensor_s *tensor, uint64_t seed)
 {
-    CTensor_s *tensor;
     uint32_t state[4];
     int i;
-
-    // Allocate the new tensor.
-    tensor = ctensor_new_tensor(size);
-    if (tensor == NULL)
-        return NULL;
 
     // Fill the 128-bit state with randomness.
     splitmix64(&seed, state);
@@ -118,7 +109,7 @@ CTensor_s *ctensor_randu(size_t size, uint64_t seed)
     for (i = 0; i < tensor->size; i++)
         tensor->data[i] = xoshiro128p(state);
 
-    return tensor;
+    return;
 }
 
 /*
@@ -128,23 +119,14 @@ CTensor_s *ctensor_randu(size_t size, uint64_t seed)
  *  Uses Blackman's and Vigna's xoshiro128+
  *  and the Marsaglia polar method.
  *
- *  @param size - numbers to be generated.
+ *  @param tensor - Tensor to be filled.
  *  @param seed - Seed for the PRNG.
- *
- *  @return - New allocated tensor
- *  containing the random numbers.
 */
-CTensor_s *ctensor_randn(size_t size, uint64_t seed)
+void ctensor_randn(CTensor_s *tensor, uint64_t seed)
 {
-    CTensor_s *tensor;
     uint32_t state[4];
     float x, y, s;
     int i;
-
-    // Allocate new tensor. 
-    tensor = ctensor_new_tensor(size);
-    if (tensor == NULL)
-        return NULL;
 
     // Fill the 128-bit state with randomness.
     splitmix64(&seed, state);
@@ -199,5 +181,5 @@ CTensor_s *ctensor_randn(size_t size, uint64_t seed)
         }
     }
 
-    return tensor;
+    return;
 }
