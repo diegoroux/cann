@@ -19,39 +19,52 @@
 #include <ctensor/ctensor.h>
 
 /*
- *  ReLU (Rectified Linear Unit) function.
- *  Applies ReLU element-wise to the provided
- *  Tensor.
+ *  ReLU initial layer function.
+ *  Fills all the layer information for the
+ *  Model Abstraction API. As defined in 
+ *  the documentation.
  *
- *  @params in - Tensor input.
- *  @param out - Tensor outupt or NULL.
- *  If NULL, a new tensor will be allocated.
- *
- *  @return - Tensor output pointer.
+ *  @param layer - Pointer of the current
+ *  ReLU layer "object" to be filled.
 */
-CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out)
+void ctensor_relu_init(CTensor_Layer_s *layer)
 {
-    ctensor_data_t *d_in, *d_out;
+    // This layer doesn't have any trainable
+    // variables, as such we do not implement
+    // any 'update' nor 'del' methods.
+    layer->fwd = ctensor_relu_fwd;
+    layer->bckp = ctensor_relu_bckp;
+    layer->update = NULL;
+    layer->del = NULL;
+
+    // This layer is not trainable.
+    layer->internal = NULL;
+    layer->internal_grad = NULL;
+
+    return;
+}
+
+/*
+ *  ReLU (Rectified Linear Unit) forward pass
+ *  function, applies ReLU element-wise to
+ *  the provided Tensor.
+ *
+ *  @params layer - Pointer to the current
+ *  ReLU layer "object".
+*/
+void ctensor_relu_fwd(CTensor_Layer_s *layer)
+{
+    ctensor_data_t *in, *out;
     int i;
 
-    // Allocate a new tensor.
-    if (out == NULL) {
-        out = ctensor_new_tensor(in->size);
-
-        if (out == NULL)
-            return NULL;
-    }
-
-    d_in = in->data;
-    d_out = out->data;
-
-    out->size = in->size;
+    in = layer->in->data;
+    out = layer->out->data;
 
     // Apply ReLU, max(0, d_in[i]);
     for (i = 0; i < in->size; i++)
-        d_out[i] = (d_in[i] < 0) ? 0 : d_in[i];
-    
-    return out;
+        out[i] = (in[i] < 0) ? 0 : in[i];
+
+    return;
 }
 
 /*
@@ -69,32 +82,20 @@ CTensor_s *ctensor_relu(CTensor_s *in, CTensor_s *out)
  *
  *  @return - Tensor output pointer.
 */
-CTensor_s *ctensor_relu_b(CTensor_s *in, CTensor_s *out, CTensor_s *loss_grad)
+void ctensor_relu_bckp(CTensor_Layer_s *layer)
 {
-    ctensor_data_t *d_in, *d_out, *d_loss;
+    ctensor_data_t *in, *out, *loss;
     int i;
 
-    // Allocate a new tensor.
-    if (out == NULL) {
-        out = ctensor_new_tensor(in->size);
-
-        if (out == NULL)
-            return NULL;
-    }
-
-    d_in = in->data;
-    d_out = out->data;
-    d_loss = loss_grad->data;
-
-    // As we'll return the partial derivative for each
-    // element, both tensors have the same size.
-    out->size = in->size;
+    in = layer->in->data;
+    out = layer->in_grad->data;
+    loss = layer->loss_grad->data;
 
     // The derivative at point d_in[i] for ReLU (max(0, x))
     // equals 1, for all d_in[i] > 0.
     // And 0 for everything else. 
     for (i = 0; i < in->size; i++)
-        d_out[i] = (d_in[i] <= 0) ? 0 : d_loss[i];
-    
-    return out;
+        out[i] = (in[i] <= 0) ? 0 : loss[i];
+
+    return;
 }

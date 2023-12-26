@@ -37,6 +37,8 @@ typedef struct _layer_s {
     CTensor_Layer_cb    fwd;
     // Backprop-pass layer callback function.
     CTensor_Layer_cb    bckp;
+    // Autograd update callback function.
+    CTensor_Layer_cb    update;
     // Cleanup (dealloc internal(_grad)).
     CTensor_Layer_cb    del;
     // Pointer to the 'prev' layer's 'in'.
@@ -58,6 +60,10 @@ typedef struct _layer_s {
      *  with respect to the loss function.
      *  Gradient which will be backpropagated to
      *  the 'prev' layer. */
+    CTensor_s           *in_grad;
+    /*  Gradient of each 'out' element,
+     *  with respect to the loss function.
+     *  Pointer to the 'next' in_grad. */
     CTensor_s           *loss_grad;
     /*  Gradient of each internal element, exported as a
      *  tensor so that the Model Abstraction API can do
