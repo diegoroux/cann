@@ -74,13 +74,8 @@ void ctensor_relu_fwd(CTensor_Layer_s *layer)
  *  each input, and by chain rule, multiplies
  *  it by the loss gradient it receives.
  *
- *  @params in - Tensor input.
- *  @param out - Tensor output or NULL.
- *  If NULL, a new tensor will be allocated.
- *  @param loss_grad - Tensor holding the gradient
- *  that's being backpropagated.
- *
- *  @return - Tensor output pointer.
+ *  @params layer - Pointer to the current
+ *  ReLU layer "object".
 */
 void ctensor_relu_bckp(CTensor_Layer_s *layer)
 {
