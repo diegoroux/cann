@@ -112,6 +112,61 @@ void ctensor_relu_fwd(CTensor_Layer_s *layer);
 void ctensor_relu_bckp(CTensor_Layer_s *layer);
 
 /*
+ *  FCL initial layer function.
+ *  Fills all the layer information for the
+ *  Model Abstraction API. As defined in 
+ *  the documentation.
+ *
+ *  @param layer - Pointer of the current
+ *  layer "object" to be filled.
+*/
+void ctensor_fcl_init(CTensor_Layer_s *layer);
+
+/*
+ *  Implements the forward pass of the FCL.
+ *
+ *  Defined as O = W • X + B, where W is the
+ *  weight matrix (out_size x in_size), X
+ *  is the input data as a vector/column matrix,
+ *  B is the bias data as a vector/column matrix,
+ *  and O is the output (out_size x 1).
+ *
+ *  @param layer - Pointer of the current
+ *  ReLU layer "object" to be filled.
+*/
+void ctensor_fcl_fwd(CTensor_Layer_s *layer);
+
+/*
+ *  Implements the backprop pass of the FCL.
+ *
+ *  @param layer - Pointer of the current
+ *  ReLU layer "object" to be filled.
+*/
+void ctensor_fcl_bckp(CTensor_Layer_s *layer);
+
+/*
+ *  Learning callback function for FCL.
+ *
+ *  This function shall only be called once the
+ *  Model Abstraction API or the user, has applied
+ *  an optimization algorithm for the gradient
+ *  descent (for internal_grad) and has stored the 
+ *  results back in layer->internal_grad.
+ *  
+ *  @param layer - Pointer of the current
+ *  layer "object".
+*/
+void ctensor_fcl_update(CTensor_Layer_s *layer);
+
+/*
+ *  Dealloc FCL Layer.
+ *
+ *  @param layer - Pointer of the current
+ *  layer "object".
+*/
+void ctensor_fcl_del(CTensor_Layer_s *layer);
+
+/*
  *  Dot-product against a column matrix.
  *
  *  B shall always be of size columns x 1.

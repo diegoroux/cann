@@ -18,6 +18,61 @@
 
 #include <ctensor/ctensor.h>
 
+#include <stdlib.h>
+
+typedef struct {
+    CTensor_s   *kernel;
+    CTensor_s   *bias;
+} _fcl_s;
+
+/*
+ *  FCL initial layer function.
+ *  Fills all the layer information for the
+ *  Model Abstraction API. As defined in 
+ *  the documentation.
+ *
+ *  @param layer - Pointer of the current
+ *  layer "object" to be filled.
+*/
+void ctensor_fcl_init(CTensor_Layer_s *layer)
+{
+    _fcl_s *data;
+
+    // Set all callbacks.
+    layer->fwd = (CTensor_Layer_cb)ctensor_fcl_fwd;
+    layer->bckp = (CTensor_Layer_cb)ctensor_fcl_bckp;
+    layer->update = (CTensor_Layer_cb)ctensor_fcl_update;
+    layer->del = (CTensor_Layer_cb)ctensor_fcl_del;
+
+    // Allocate internal state.
+    data = (_fcl_s *)malloc(sizeof(_fcl_s));
+    layer->internal = (void *)data;
+
+    if (data == NULL)
+        return;
+
+    // Allocate the Tensor for the weights.
+    data->kernel = ctensor_new_tensor(layer->out->size * layer->in->size);
+
+    if (data->kernel == NULL)
+        return;
+
+    // Allocate the Tensor for the bias.
+    data->bias = ctensor_new_tensor(layer->out->size);
+
+    if (data->bias == NULL)
+        return;
+
+    // The internal gradient is conformed by both the weights and the bias.
+    layer->internal_grad =
+            ctensor_new_tensor(data->kernel->size + data->bias->size);
+
+    if (layer->internal_grad == NULL)
+        return;
+
+    return;
+}
+
 /*
  *  Implements the forward pass of the FCL.
  *
@@ -27,58 +82,126 @@
  *  B is the bias data as a vector/column matrix,
  *  and O is the output (out_size x 1).
  *
- *  @param in - Tensor coming in.
- *  @param kernel - Weight tensor.
- *  @param bias - Bias tensor.
- *  @param out - Out tensor.
- *
- *  @return - Pointer to the out tensor.
+ *  @param layer - Pointer of the current
+ *  layer "object".
 */
-CTensor_s *ctensor_fcl_fwd(CTensor_s *in, CTensor_s *kernel, CTensor_s *bias, CTensor_s *out)
+void ctensor_fcl_fwd(CTensor_Layer_s *layer)
 {
+    CTensor_s *kernel, *bias, *in, *out;
+    _fcl_s *data;
+
+    in = layer->in;
+    out = layer->out;
+
+    data = (_fcl_s *)layer->internal;
+
+    kernel = data->kernel;
+    bias = data->bias;
+
     ctensor_mv_dot_product(kernel->data, out->size, in->size, in->data, out->data);
     ctensor_vector_sum(out->data, out->size, bias->data, out->data);
 
-    return out;
+    return;
 }
 
 /*
  *  Implements the backprop pass of the FCL.
  *
- *  @param in - Tensor coming in.
- *  @param kernel - Weight tensor.
- *  @param loss_grad - Gradient backpropagated.
- *  @param kernel_grad - Weight gradient with respect to
- *  the loss function.
- *  @param bias_grad - Bias gradient with respect to the
- *  loss function.
- *
- *  @return - Pointer to the tensor, contaning the gradient
- *  of the input with respect to the loss function.
+ *  @param layer - Pointer of the current
+ *  layer "object".
 */
-CTensor_s *ctensor_fcl_bckp(CTensor_s *in, CTensor_s *kernel, CTensor_s *loss_grad,
-                            CTensor_s *kernel_grad, CTensor_s *bias_grad)
+void ctensor_fcl_bckp(CTensor_Layer_s *layer)
 {
-    CTensor_s *in_grad;
+    ctensor_data_t *kernel_grad, *bias_grad, *loss_grad, *in_grad;
+    ctensor_data_t *in_data, *kernel_data;
+    size_t in_size, out_size;
+    _fcl_s *data;
     int i, j;
 
-    in_grad = ctensor_new_tensor(in->size);
-    
-    if (in_grad == NULL)
-        return NULL;
+    in_size = layer->in->size;
+    out_size = layer->out->size;
 
-    for (i = 0; i < in->size; i++)
-        in_grad->data[i] = 0.00f;
+    in_data = layer->in->data;
 
-    // TODO: Optimize this.
-    for (i = 0; i < loss_grad->size; i++) {
-        for (j = 0; j < in->size; j++) {
-            kernel_grad->data[i * loss_grad->size + j] = in->data[j] * loss_grad->data[i];
-            in_grad->data[j] += kernel->data[i * loss_grad->size + j] * loss_grad->data[i];
+    data = (_fcl_s *)layer->internal;
+    kernel_data = data->kernel->data;
+
+    in_grad = layer->in_grad->data;
+    loss_grad = layer->loss_grad->data;
+
+    kernel_grad = layer->internal_grad->data;
+    bias_grad = &kernel_grad[out_size * in_size];
+
+    for (i = 0; i < in_size; i++)
+        in_grad[i] = 0.00f;
+
+    for (i = 0; i < out_size; i++) {
+        for (j = 0; j < in_size; j++) {
+            kernel_grad[i * out_size + j] = in_data[j] * loss_grad[i];
+            in_grad[j] += kernel_data[i * out_size + j] * loss_grad[i];
         }
 
-        bias_grad->data[i] = loss_grad->data[i];   
+        bias_grad[i] = loss_grad[i];
     }
 
-    return in_grad;
+    return;
+}
+
+/*
+ *  Learning callback function for FCL.
+ *
+ *  This function shall only be called once the
+ *  Model Abstraction API or the user, has applied
+ *  an optimization algorithm for the gradient
+ *  descent (for internal_grad) and has stored the 
+ *  results back in layer->internal_grad.
+ *  
+ *  @param layer - Pointer of the current
+ *  layer "object".
+*/
+void ctensor_fcl_update(CTensor_Layer_s *layer)
+{
+    ctensor_data_t *kernel, *bias, *internal_grad;
+    _fcl_s *data;
+    int i;
+
+    internal_grad = layer->internal_grad->data;
+    data = layer->internal;
+
+    kernel = data->kernel->data;
+    bias = data->bias->data;
+
+    for (i = 0; i < data->kernel->size; i++)
+        kernel[i] += internal_grad[i];
+
+    for (; i < data->bias->size; i++)
+        bias[i] += internal_grad[i];
+
+    return;
+}
+
+/*
+ *  Dealloc FCL Layer.
+ *
+ *  @param layer - Pointer of the current
+ *  layer "object".
+*/
+void ctensor_fcl_del(CTensor_Layer_s *layer)
+{
+    _fcl_s *data;
+
+    ctensor_destroy_tensor(layer->internal_grad);
+    layer->internal_grad = NULL;
+
+    data = layer->internal;
+
+    ctensor_destroy_tensor(data->kernel);
+    ctensor_destroy_tensor(data->bias);
+
+    data->kernel = NULL;
+    data->bias = NULL;
+
+    free(data);
+
+    return;
 }
