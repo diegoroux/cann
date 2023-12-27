@@ -32,8 +32,8 @@ void ctensor_relu_init(CTensor_Layer_s *layer)
     // This layer doesn't have any trainable
     // variables, as such we do not implement
     // any 'update' nor 'del' methods.
-    layer->fwd = ctensor_relu_fwd;
-    layer->bckp = ctensor_relu_bckp;
+    layer->fwd = (CTensor_Layer_cb)ctensor_relu_fwd;
+    layer->bckp = (CTensor_Layer_cb)ctensor_relu_bckp;
     layer->update = NULL;
     layer->del = NULL;
 
@@ -55,13 +55,16 @@ void ctensor_relu_init(CTensor_Layer_s *layer)
 void ctensor_relu_fwd(CTensor_Layer_s *layer)
 {
     ctensor_data_t *in, *out;
+    size_t in_size;
     int i;
 
     in = layer->in->data;
     out = layer->out->data;
 
+    in_size = layer->in->size;
+
     // Apply ReLU, max(0, d_in[i]);
-    for (i = 0; i < in->size; i++)
+    for (i = 0; i < in_size; i++)
         out[i] = (in[i] < 0) ? 0 : in[i];
 
     return;
@@ -80,16 +83,19 @@ void ctensor_relu_fwd(CTensor_Layer_s *layer)
 void ctensor_relu_bckp(CTensor_Layer_s *layer)
 {
     ctensor_data_t *in, *out, *loss;
+    size_t in_size;
     int i;
 
     in = layer->in->data;
     out = layer->in_grad->data;
     loss = layer->loss_grad->data;
 
+    in_size = layer->in->size;
+
     // The derivative at point d_in[i] for ReLU (max(0, x))
     // equals 1, for all d_in[i] > 0.
     // And 0 for everything else. 
-    for (i = 0; i < in->size; i++)
+    for (i = 0; i < in_size; i++)
         out[i] = (in[i] <= 0) ? 0 : loss[i];
 
     return;

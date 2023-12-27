@@ -41,7 +41,7 @@ void ctensor_xavier_he_init(CTensor_s *tensor, size_t in_size, uint64_t seed)
     for (i = 0; i < tensor->size; i++)
         tensor->data[i] *= std;
 
-    return tensor;
+    return;
 }
 
 /*
@@ -65,5 +65,5 @@ void ctensor_xavier_init(CTensor_s *tensor, size_t in_size, uint64_t seed)
     for (i = 0; i < tensor->size; i++)
         tensor->data[i] *= std;
 
-    return tensor;
+    return;
 }
