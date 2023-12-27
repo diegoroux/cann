@@ -67,7 +67,7 @@ typedef struct _layer_s {
     CTensor_s           *loss_grad;
     /*  Gradient of each internal element, exported as a
      *  tensor so that the Model Abstraction API can do
-     *  autograd.
+     *  optimization.
      *
      *  It's the layer's responsability to allocate and
      *  deallocate this gradient Tensor.
@@ -77,6 +77,23 @@ typedef struct _layer_s {
      *  any "trainable" variables. */
     CTensor_s           *internal_grad;
 } CTensor_Layer_s;
+
+typedef ctensor_data_t (*CTensor_Loss_cb)(void *, CTensor_s *);
+
+typedef struct _loss_ls {
+    // Models are really just linked lists
+    // with callbacks, and hyperparameters.
+    CTensor_Layer_s     *prev;
+    // Forward-pass layer callback function.
+    CTensor_Loss_cb     fwd;
+    // Backprop-pass layer callback function.
+    CTensor_Loss_cb     bckp;
+    /*  Gradient of each 'in' element,
+     *  with respect to the loss function.
+     *  Gradient which will be backpropagated to
+     *  the 'prev' layer. */
+    CTensor_s           *in_grad;
+} CTensor_Loss_s;
 
 /*
  *  ReLU initial layer function.
@@ -165,6 +182,14 @@ void ctensor_fcl_update(CTensor_Layer_s *layer);
  *  layer "object".
 */
 void ctensor_fcl_del(CTensor_Layer_s *layer);
+
+/*
+ *  Initializes the Loss Layer with fwd and bck
+ *  callbacks.
+ *
+ *  @param layer - Current layer "object".
+*/
+void ctensor_mse_init(CTensor_Loss_s *layer);
 
 /*
  *  Dot-product against a column matrix.
