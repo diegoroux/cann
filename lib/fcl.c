@@ -168,7 +168,7 @@ void ctensor_fcl_update(CTensor_Layer_s *layer)
 {
     ctensor_data_t *kernel, *bias, *internal_grad;
     _fcl_s *data;
-    int i;
+    int offset;
 
     internal_grad = layer->internal_grad->data;
     data = layer->internal;
@@ -176,11 +176,10 @@ void ctensor_fcl_update(CTensor_Layer_s *layer)
     kernel = data->kernel->data;
     bias = data->bias->data;
 
-    for (i = 0; i < data->kernel->size; i++)
-        kernel[i] += internal_grad[i];
+    offset = data->kernel->size;
 
-    for (; i < data->bias->size; i++)
-        bias[i] += internal_grad[i];
+    ctensor_vector_sum(kernel, data->kernel->size, internal_grad, kernel);
+    ctensor_vector_sum(bias, data->bias->size, &internal_grad[offset], bias);
 
     return;
 }
