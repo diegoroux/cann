@@ -26,7 +26,9 @@ typedef struct {
     ctensor_data_t  *data;
 } CTensor_s;
 
-typedef void (*CTensor_Layer_cb)(void *);
+struct _layer_s;
+
+typedef void (*CTensor_Layer_cb)(struct _layer_s *);
 
 typedef struct _layer_s {
     // Models are really just linked lists
@@ -88,12 +90,36 @@ typedef struct _loss_ls {
     CTensor_Loss_cb     fwd;
     // Backprop-pass layer callback function.
     CTensor_Loss_cb     bckp;
+    // Pointer to the 'prev' layer's 'in'.
+    CTensor_s           *in;
     /*  Gradient of each 'in' element,
      *  with respect to the loss function.
      *  Gradient which will be backpropagated to
      *  the 'prev' layer. */
     CTensor_s           *in_grad;
 } CTensor_Loss_s;
+
+typedef struct _model_s {
+    // Models are really just linked lists
+    // with hyperparameters.
+    // Start layer, the input layer.
+    CTensor_Layer_s     *startl;
+    // Last added layer, output layer.
+    CTensor_Layer_s     *lastl;
+    // Loss layer, not added to linked list,
+    // as it will only be used during backprop.
+    // lossl->prev = lastl;
+    CTensor_Loss_s      *lossl;
+    // Hyperparameters.
+    ctensor_data_t      learning_rate;
+    ctensor_data_t      regularization_rate;
+} CTensor_Model_s;
+
+void ctensor_init(CTensor_Model_s *model, size_t in_size);
+CTensor_Layer_s *ctensor_add_layer(CTensor_Model_s *model, size_t out_size, CTensor_Layer_cb init_cb);
+CTensor_Loss_s *ctensor_set_loss(CTensor_Model_s *model, CTensor_Layer_cb init_cb);
+CTensor_s *ctensor_predict(CTensor_Model_s *model, CTensor_s *input);
+void ctensor_destroy(CTensor_Model_s *model);
 
 /*
  *  ReLU initial layer function.
@@ -107,28 +133,6 @@ typedef struct _loss_ls {
 void ctensor_relu_init(CTensor_Layer_s *layer);
 
 /*
- *  ReLU (Rectified Linear Unit) forward pass
- *  function, applies ReLU element-wise to
- *  the provided Tensor.
- *
- *  @params layer - Pointer to the current
- *  ReLU layer "object".
-*/
-void ctensor_relu_fwd(CTensor_Layer_s *layer);
-
-/*
- *  First order partial derivative of the
- *  ReLU (Rectified Linear Unit) function.
- *  Calculates the local gradient of
- *  each input, and by chain rule, multiplies
- *  it by the loss gradient it receives.
- *
- *  @params layer - Pointer to the current
- *  ReLU layer "object".
-*/
-void ctensor_relu_bckp(CTensor_Layer_s *layer);
-
-/*
  *  FCL initial layer function.
  *  Fills all the layer information for the
  *  Model Abstraction API. As defined in 
@@ -138,50 +142,6 @@ void ctensor_relu_bckp(CTensor_Layer_s *layer);
  *  layer "object" to be filled.
 */
 void ctensor_fcl_init(CTensor_Layer_s *layer);
-
-/*
- *  Implements the forward pass of the FCL.
- *
- *  Defined as O = W • X + B, where W is the
- *  weight matrix (out_size x in_size), X
- *  is the input data as a vector/column matrix,
- *  B is the bias data as a vector/column matrix,
- *  and O is the output (out_size x 1).
- *
- *  @param layer - Pointer of the current
- *  ReLU layer "object" to be filled.
-*/
-void ctensor_fcl_fwd(CTensor_Layer_s *layer);
-
-/*
- *  Implements the backprop pass of the FCL.
- *
- *  @param layer - Pointer of the current
- *  ReLU layer "object" to be filled.
-*/
-void ctensor_fcl_bckp(CTensor_Layer_s *layer);
-
-/*
- *  Learning callback function for FCL.
- *
- *  This function shall only be called once the
- *  Model Abstraction API or the user, has applied
- *  an optimization algorithm for the gradient
- *  descent (for internal_grad) and has stored the 
- *  results back in layer->internal_grad.
- *  
- *  @param layer - Pointer of the current
- *  layer "object".
-*/
-void ctensor_fcl_update(CTensor_Layer_s *layer);
-
-/*
- *  Dealloc FCL Layer.
- *
- *  @param layer - Pointer of the current
- *  layer "object".
-*/
-void ctensor_fcl_del(CTensor_Layer_s *layer);
 
 /*
  *  Initializes the Loss Layer with fwd and bck

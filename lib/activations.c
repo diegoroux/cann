@@ -18,6 +18,9 @@
 
 #include <ctensor/ctensor.h>
 
+void ctensor_relu_fwd(CTensor_Layer_s *layer);
+void ctensor_relu_bckp(CTensor_Layer_s *layer);
+
 /*
  *  ReLU initial layer function.
  *  Fills all the layer information for the

@@ -16,7 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-static ctensor_data_t ctensor_mse_fwd(CTensor_Loss_s *layer, CTensor *expected);
+#include <ctensor/ctensor.h>
+
+static ctensor_data_t ctensor_mse_fwd(CTensor_Loss_s *layer, CTensor_s *expected);
 static ctensor_data_t ctensor_mse_bckp(CTensor_Loss_s *layer, CTensor_s *expected);
 
 /*
@@ -33,13 +35,13 @@ void ctensor_mse_init(CTensor_Loss_s *layer)
     return;
 }
 
-static ctensor_data_t ctensor_mse_fwd(CTensor_Loss_s *layer, CTensor *expected)
+static ctensor_data_t ctensor_mse_fwd(CTensor_Loss_s *layer, CTensor_s *expected)
 {
     ctensor_data_t network_loss = 0.00, output_loss;
     CTensor_s *output;
     int i;
 
-    output = layer->prev->out;
+    output = layer->in;
 
     for (i = 0; i < expected->size; i++) {
         output_loss = (expected->data[i] - output->data[i]);
@@ -55,8 +57,9 @@ static ctensor_data_t ctensor_mse_bckp(CTensor_Loss_s *layer, CTensor_s *expecte
 {
     CTensor_s *output, *in_grad;
     ctensor_data_t c;
+    int i;
 
-    output = layer->prev->out;
+    output = layer->in;
     in_grad = layer->in_grad;
 
     c = 2.00/(ctensor_data_t)expected->size;

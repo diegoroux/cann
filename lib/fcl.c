@@ -25,6 +25,11 @@ typedef struct {
     CTensor_s   *bias;
 } _fcl_s;
 
+void ctensor_fcl_fwd(CTensor_Layer_s *layer);
+void ctensor_fcl_bckp(CTensor_Layer_s *layer);
+void ctensor_fcl_update(CTensor_Layer_s *layer);
+void ctensor_fcl_del(CTensor_Layer_s *layer);
+
 /*
  *  FCL initial layer function.
  *  Fills all the layer information for the
