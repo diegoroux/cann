@@ -79,6 +79,33 @@ void ctensor_fcl_init(CTensor_Layer_s *layer)
 }
 
 /*
+ *  Default initialization for FCL.
+ *  Performs the Xavier-He init for the weights
+ *  and a zero init for the bias.
+ *  
+ *  @param layer - FCL layer.
+ *  @param seed - Seed for the random Xavier-He init.
+*/
+void ctensor_fcl_param_init(CTensor_Layer_s *layer, uint64_t seed)
+{
+    CTensor_s *kernel, *bias;
+    _fcl_s *data;
+    int i;
+
+    data = (_fcl_s *)fcl->internal;
+
+    kernel = data->kernel;
+    bias = data->bias;
+
+    ctensor_xavier_he_init(kernel, layer->in->size, seed);
+
+    for (i = 0; i < bias->size; i++)
+        bias->data[i] = 0.00;
+
+    return;
+}
+
+/*
  *  Implements the forward pass of the FCL.
  *
  *  Defined as O = W • X + B, where W is the
@@ -137,13 +164,17 @@ void ctensor_fcl_bckp(CTensor_Layer_s *layer)
     kernel_grad = layer->internal_grad->data;
     bias_grad = &kernel_grad[out_size * in_size];
 
-    for (i = 0; i < in_size; i++)
-        in_grad[i] = 0.00f;
+    for (i = 0; i < in_size; i++) {
+        in_grad[i] = 0.00;
+
+        for (j = 0; j < out_size; j++) {
+            in_grad[i] += kernel_data[j * in_size + i] * loss_grad[i];
+        }
+    }
 
     for (i = 0; i < out_size; i++) {
         for (j = 0; j < in_size; j++) {
-            kernel_grad[i * out_size + j] = in_data[j] * loss_grad[i];
-            in_grad[j] += kernel_data[i * out_size + j] * loss_grad[i];
+            kernel_grad[i * in_size + j] = in_data[j] * loss_grad[i];
         }
 
         bias_grad[i] = loss_grad[i];
@@ -171,7 +202,7 @@ void ctensor_fcl_update(CTensor_Layer_s *layer)
     int offset;
 
     internal_grad = layer->internal_grad->data;
-    data = layer->internal;
+    data = (_fcl_s *)layer->internal;
 
     kernel = data->kernel->data;
     bias = data->bias->data;
