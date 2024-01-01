@@ -133,6 +133,25 @@ typedef struct _model_s {
 } CTensor_Model_s;
 
 /*
+ *  This callback will be used in training, when the next batch
+ *  is needed; instead of relying that all the batches are loaded
+ *  into one tensor (defeating one of the mini-batch's purposes)
+ *  we call this function, with pointer to our x_train and y_train
+ *  pointer, expecting them to be redirected to the next batch
+ *  Tensor.
+ *
+ *  Data allocation and deallocation, is the user's responsability
+ *  as once our pointers are redirected, we can no longer do anything
+ *  about the previous batch, we do not store a history of batches.
+ *
+ *  The first double-pointer corresponds to x_train.
+ *  The second double-pointer corresponds to y_train.
+ *  The int, will indicated which mini-batch the network is requesting
+ *  to be loaded.
+*/
+typedef void (*CTensor_Batch_cb)(CTensor_s **, CTensor_s **, int);
+
+/*
  *  Initialize model.
  *
  *  @param model - Struct pointer to the model.
@@ -189,8 +208,8 @@ CTensor_s *ctensor_predict(CTensor_Model_s *model, CTensor_s *input);
 */
 ctensor_data_t ctensor_test(CTensor_Model_s *model, CTensor_s *input, CTensor_s *expected);
 
-ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_s *x_train,
-                CTensor_s *y_train, CTensor_s *x_test, CTensor_s *y_test);
+ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_Batch_cb get_nbatch,
+                            CTensor_s *x_test, CTensor_s *y_test);
 
 /*
  *  Cleanup model, dealloc model internals.
