@@ -18,8 +18,13 @@
 
 #include <ctensor/ctensor.h>
 
-void ctensor_relu_fwd(CTensor_Layer_s *layer);
-void ctensor_relu_bckp(CTensor_Layer_s *layer);
+#include <math.h>
+
+static void ctensor_relu_fwd(CTensor_Layer_s *layer);
+static void ctensor_relu_bckp(CTensor_Layer_s *layer);
+
+static void ctensor_softmax_fwd(CTensor_Layer_s *layer);
+static void ctensor_softmax_bckp(CTensor_Layer_s *layer);
 
 /*
  *  ReLU initial layer function.
@@ -30,7 +35,7 @@ void ctensor_relu_bckp(CTensor_Layer_s *layer);
  *  @param layer - Pointer of the current
  *  ReLU layer "object" to be filled.
 */
-void ctensor_relu_init(CTensor_Layer_s *layer)
+void ctensor_relu(CTensor_Layer_s *layer)
 {
     // This layer doesn't have any trainable
     // variables, as such we do not implement
@@ -55,7 +60,7 @@ void ctensor_relu_init(CTensor_Layer_s *layer)
  *  @params layer - Pointer to the current
  *  ReLU layer "object".
 */
-void ctensor_relu_fwd(CTensor_Layer_s *layer)
+static void ctensor_relu_fwd(CTensor_Layer_s *layer)
 {
     ctensor_data_t *in, *out;
     size_t in_size;
@@ -83,7 +88,7 @@ void ctensor_relu_fwd(CTensor_Layer_s *layer)
  *  @params layer - Pointer to the current
  *  ReLU layer "object".
 */
-void ctensor_relu_bckp(CTensor_Layer_s *layer)
+static void ctensor_relu_bckp(CTensor_Layer_s *layer)
 {
     ctensor_data_t *in, *out, *loss;
     size_t in_size;

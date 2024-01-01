@@ -80,9 +80,11 @@ typedef struct _layer_s {
     CTensor_s           *internal_grad;
 } CTensor_Layer_s;
 
-typedef ctensor_data_t (*CTensor_Loss_cb)(void *, CTensor_s *);
+struct _loss_s;
 
-typedef struct _loss_ls {
+typedef ctensor_data_t (*CTensor_Loss_cb)(struct _loss_s *, CTensor_s *);
+
+typedef struct _loss_s {
     // Models are really just linked lists
     // with callbacks, and hyperparameters.
     CTensor_Layer_s     *prev;
@@ -99,6 +101,18 @@ typedef struct _loss_ls {
     CTensor_s           *in_grad;
 } CTensor_Loss_s;
 
+struct _optimizer_s;
+
+typedef void (*CTensor_Optimize_cb)(struct _optimizer_s *, CTensor_s *, ctensor_data_t);
+
+typedef struct _optimizer_s {
+    CTensor_Optimize_cb opt;
+    CTensor_Layer_cb    del;
+    void                *internal;
+} CTensor_Optimizer_s;
+
+struct _model_s;
+
 typedef struct _model_s {
     // Models are really just linked lists
     // with hyperparameters.
@@ -110,16 +124,87 @@ typedef struct _model_s {
     // as it will only be used during backprop.
     // lossl->prev = lastl;
     CTensor_Loss_s      *lossl;
+    CTensor_Optimizer_s *optimizer;
+    size_t              epochs;
+    size_t              batch_size;
+    size_t              batches;
     // Hyperparameters.
     ctensor_data_t      learning_rate;
-    ctensor_data_t      regularization_rate;
 } CTensor_Model_s;
 
+/*
+ *  Initialize model.
+ *
+ *  @param model - Struct pointer to the model.
+ *  @param in_size - Number of input nodes.
+*/
 void ctensor_init(CTensor_Model_s *model, size_t in_size);
+
+/*
+ *  Set the next layer to the model.
+ *
+ *  @param model - Pointer to the model.
+ *  @param out_size - Number of output nodes of the layer.
+ *  @param init_cb - Init callback function
+ *  (function shall be casted to CTensor_Layer_cb).
+*/
 CTensor_Layer_s *ctensor_add_layer(CTensor_Model_s *model, size_t out_size, CTensor_Layer_cb init_cb);
+
+/*
+ *  Define the loss function for this model.
+ *
+ *  @param model - Pointer to the model.
+ *  @param init_cb - Init callback function
+ *  (function shall be casted to CTensor_Layer_cb).
+ *  
+ *  @return - Loss struct layer.
+*/
 CTensor_Loss_s *ctensor_set_loss(CTensor_Model_s *model, CTensor_Layer_cb init_cb);
+
+/*
+ *  Define the model's gradient optimization algorithm.
+ *
+ *  @param model - Model to optimize.
+ *  @param init_cb - Init callback function
+ *  (function shall be casted to CTensor_Layer_cb).
+ *
+ *  @return - Optimizer layer pointer.
+*/
+CTensor_Optimizer_s *ctensor_set_optimizer(CTensor_Model_s *model, CTensor_Layer_cb init_cb);
+
+/*
+ *  Obtain the model's prediction, given an input.
+ *
+ *  @param model - Model's struct.
+ *  @param input - Tensor containing the input data.
+*/
 CTensor_s *ctensor_predict(CTensor_Model_s *model, CTensor_s *input);
+
+/*
+ *  Test performance against an input with known outputs.
+ *
+ *  @param model - Model to be tested.
+ *  @param input - Input tensor (must be in_sized).
+ *  @param expected - Expected output tensor (must be out_sized).
+*/
+ctensor_data_t ctensor_test(CTensor_Model_s *model, CTensor_s *input, CTensor_s *expected);
+
+ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_s *x_train,
+                CTensor_s *y_train, CTensor_s *x_test, CTensor_s *y_test);
+
+/*
+ *  Cleanup model, dealloc model internals.
+ *
+ *  @param model - Model to destroy.
+*/
 void ctensor_destroy(CTensor_Model_s *model);
+
+/*
+ *  Adam init function.
+ *
+ *  @param layer - Layer info to init.
+*/
+void ctensor_adam(CTensor_Optimizer_s *layer);
 
 /*
  *  ReLU initial layer function.
@@ -130,7 +215,7 @@ void ctensor_destroy(CTensor_Model_s *model);
  *  @param layer - Pointer of the current
  *  ReLU layer "object" to be filled.
 */
-void ctensor_relu_init(CTensor_Layer_s *layer);
+void ctensor_relu(CTensor_Layer_s *layer);
 
 /*
  *  FCL initial layer function.
@@ -144,12 +229,24 @@ void ctensor_relu_init(CTensor_Layer_s *layer);
 void ctensor_fcl_init(CTensor_Layer_s *layer);
 
 /*
+ *  Default initialization for FCL.
+ *  Performs the Xavier-He init for the weights
+ *  and a zero init for the bias.
+ *  
+ *  @param layer - FCL layer.
+ *  @param seed - Seed for the random Xavier-He init.
+*/
+void ctensor_fcl_param_init(CTensor_Layer_s *layer, uint64_t seed);
+
+/*
  *  Initializes the Loss Layer with fwd and bck
  *  callbacks.
  *
  *  @param layer - Current layer "object".
 */
 void ctensor_mse_init(CTensor_Loss_s *layer);
+
+void ctensor_ce_loss(CTensor_Loss_s *layer);
 
 /*
  *  Dot-product against a column matrix.
@@ -227,3 +324,21 @@ void ctensor_randn(CTensor_s *tensor, uint64_t seed);
  *  @param seed - Seed for the PRNG.
 */
 void ctensor_xavier_he_init(CTensor_s *tensor, size_t in_size, uint64_t seed);
+
+/*
+ *  Set the whole tensor to zeros.
+ *
+ *  @param tensor - Tensor to be filled.
+*/
+void ctensor_tensor_zeros(CTensor_s *tensor);
+
+/*
+ *  Perform a multiplication between vector A and
+ *  scalar alpha. Store result in vector B.
+ *
+ *  @param A - pointer to vector A.
+ *  @param elements - Number of elements.
+ *  @param alpha - Scalar alpha.
+ *  @param B - pointer to vector result
+*/
+void ctensor_sv_mult(float *A, size_t elements, float alpha, float *B);

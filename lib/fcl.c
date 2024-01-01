@@ -92,7 +92,7 @@ void ctensor_fcl_param_init(CTensor_Layer_s *layer, uint64_t seed)
     _fcl_s *data;
     int i;
 
-    data = (_fcl_s *)fcl->internal;
+    data = (_fcl_s *)layer->internal;
 
     kernel = data->kernel;
     bias = data->bias;
