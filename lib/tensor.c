@@ -60,10 +60,29 @@ CTensor_s *ctensor_new_tensor(size_t size)
  *  @param tensor - Pointer to the tensor struct
  *  to be de-allocated.
 */
-void *ctensor_destroy_tensor(CTensor_s *tensor)
+void ctensor_destroy_tensor(CTensor_s *tensor)
 {
     free(tensor->data);
     free(tensor);
+
+    return;
+}
+
+/*
+ *  Set the whole tensor to zeros.
+ *
+ *  @param tensor - Tensor to be filled.
+*/
+void ctensor_tensor_zeros(CTensor_s *tensor)
+{
+    ctensor_data_t *data;
+    int i;
+
+    data = tensor->data;
+
+    for (i = 0; i < tensor->size; i++) {
+        data[i] = 0.00;
+    }
 
     return;
 }
