@@ -339,10 +339,11 @@ static inline ctensor_data_t _ct_train_batch(CTensor_Model_s *model,
     return batch_loss;
 }
 
-ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_s *x_train,
-                CTensor_s *y_train, CTensor_s *x_test, CTensor_s *y_test)
+ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_Batch_cb get_nbatch,
+                            CTensor_s *x_test, CTensor_s *y_test)
 {
-    ctensor_data_t network_loss;
+    CTensor_s *x_train = NULL, *y_train = NULL;
+    ctensor_data_t network_loss = 0.00;
     CTensor_s *avg_grad = NULL;
     size_t grad_size = 0;
     int epoch, batch;
@@ -353,8 +354,11 @@ ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_s *x_train,
     for (epoch = 0; epoch < model->epochs; epoch++) {
         network_loss = 0.00;
 
-        for (batch = 0; batch < model->batches; batch++)
+        for (batch = 0; batch < model->batches; batch++) {
+            // Obtain the next batch.
+            get_nbatch(&x_train, &y_train, batch);
             network_loss += _ct_train_batch(model, x_train, y_train, x_test, y_test, avg_grad);
+        }
 
         network_loss /= model->batches;
     }
