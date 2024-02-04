@@ -297,6 +297,72 @@ void ctensor_vector_sum(float *A, size_t elements, float *B, float *C);
  *  Allocate a new tensor.
  *
  *  @param size - Size of the new tensor.
+ *  @param layer - Pointer of the current
+ *  ReLU layer "object" to be filled.
+*/
+void ctensor_relu(CTensor_Layer_s *layer);
+
+/*
+ *  FCL initial layer function.
+ *  Fills all the layer information for the
+ *  Model Abstraction API. As defined in 
+ *  the documentation.
+ *
+ *  @param layer - Pointer of the current
+ *  layer "object" to be filled.
+*/
+void ctensor_fcl_init(CTensor_Layer_s *layer);
+
+/*
+ *  Default initialization for FCL.
+ *  Performs the Xavier-He init for the weights
+ *  and a zero init for the bias.
+ *  
+ *  @param layer - FCL layer.
+ *  @param seed - Seed for the random Xavier-He init.
+*/
+void ctensor_fcl_param_init(CTensor_Layer_s *layer, uint64_t seed);
+
+/*
+ *  Initializes the Loss Layer with fwd and bck
+ *  callbacks.
+ *
+ *  @param layer - Current layer "object".
+*/
+void ctensor_mse_init(CTensor_Loss_s *layer);
+
+void ctensor_ce_loss(CTensor_Loss_s *layer);
+
+/*
+ *  Dot-product against a column matrix.
+ *
+ *  B shall always be of size columns x 1.
+ *  
+ *  @param A - Pointer to the matrix
+ *  @param rows - Number of A's rows.
+ *  @param columns - Number of A's columns.
+ *  @param B - Pointer to the B column matrix.
+ *  @param C - Pointer to where the result of
+ *  the dot product will be stored.
+*/
+void ctensor_mv_dot_product(float *A, size_t rows, size_t columns, float *B, float *C);
+
+/*
+ *  Perform a sum between vector A and
+ *  vector B. Store result in vector C.
+ *
+ *  @param A - pointer to vector A.
+ *  @param elements - Number of elements.
+ *  @param B - pointer to vector B.
+ *  @param C - pointer to result column
+ *  matrix C.
+*/
+void ctensor_vector_sum(float *A, size_t elements, float *B, float *C);
+
+/*
+ *  Allocate a new tensor.
+ *
+ *  @param size - Size of the new tensor.
  *
  *  @return - New allocated tensor pointer.
 */
