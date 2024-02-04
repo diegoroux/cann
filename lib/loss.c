@@ -85,9 +85,9 @@ void ctensor_ce_loss(CTensor_Loss_s *layer)
 
 static ctensor_data_t ctensor_cel_fwd(CTensor_Loss_s *layer, CTensor_s *expected)
 {
-    ctensor_data_t network_loss, max_logit, sum = 0.00;
+    ctensor_data_t max_logit, network_loss = 0.00, sum = 0.00;
     CTensor_s *logits;
-    int tc, i;
+    int i;
 
     logits = layer->in;
 

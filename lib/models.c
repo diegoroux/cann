@@ -343,7 +343,7 @@ ctensor_data_t ctensor_train(CTensor_Model_s *model, CTensor_Batch_cb get_nbatch
                             CTensor_s *x_test, CTensor_s *y_test)
 {
     CTensor_s *x_train = NULL, *y_train = NULL;
-    ctensor_data_t network_loss;
+    ctensor_data_t network_loss = 0.00;
     CTensor_s *avg_grad = NULL;
     size_t grad_size = 0;
     int epoch, batch;
