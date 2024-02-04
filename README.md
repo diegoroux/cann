@@ -18,7 +18,9 @@ cmake ..
 ```
 
 ## Examples
-I've been able to successfully overfit a Dense network (784 input nodes, FCL 16 nodes with ReLU, FCL 10 nodes with RELU, Cross-Entropy Loss) on the MNIST Handwritten digit dataset. ![Loss Figure](images/Figure1.png)
+I've been able to successfully overfit a Dense network (784 input nodes, FCL 16 nodes with ReLU, FCL 10 nodes with RELU, Cross-Entropy Loss) on the MNIST Handwritten digit dataset.
+
+![Loss Figure](images/Figure1.png)
 
 ## Contributing
 Contributions to CTensor are welcome! Whether you find a bug, have a feature request, found a typo or want to contribute code, please feel free to open an issue/submit a pull request.
